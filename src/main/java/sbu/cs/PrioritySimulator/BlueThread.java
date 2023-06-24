@@ -1,7 +1,15 @@
 package sbu.cs.PrioritySimulator;
 
-public class BlueThread extends ColorThread {
+import java.util.concurrent.CountDownLatch;
 
+public class BlueThread extends ColorThread {
+    private int delay;
+    private CountDownLatch CDLatch;
+
+    public BlueThread(int delay,CountDownLatch CDLatch ){
+        this.CDLatch = CDLatch;
+        this.delay = delay;
+    }
     private static final String MESSAGE = "hi finished blacks, hi whites!";
 
     void printMessage() {
@@ -15,6 +23,18 @@ public class BlueThread extends ColorThread {
 
     @Override
     public void run() {
-        // TODO call printMessage
+        try
+        {
+            Thread.currentThread().setPriority(NORM_PRIORITY);
+            Thread.sleep(delay);
+            CDLatch.countDown();    // use countDown() method of the CountDownLatch
+            printMessage();
+        }
+
+        // use catch block to handle InterruptedException
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

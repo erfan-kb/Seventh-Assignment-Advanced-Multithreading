@@ -1,5 +1,8 @@
 package sbu.cs.CalculatePi;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class PiCalculator {
 
     /**
@@ -14,11 +17,113 @@ public class PiCalculator {
      * @param floatingPoint the exact number of digits after the floating point
      * @return pi in string format (the string representation of the BigDecimal object)
      */
+    private static final int THREAD_COUNT = 4;
+
+    private static final int SCALE = 10000;
 
     public String calculate(int floatingPoint)
     {
-        // TODO
-        return null;
+        BigDecimal pi = BigDecimal.ZERO;
+
+        BigDecimal term;
+
+        BigDecimal one = new BigDecimal(1);
+
+        boolean sign = true;
+
+
+
+        for (int i = 0; i < THREAD_COUNT; i++) {
+
+            int start = i * SCALE / THREAD_COUNT;
+
+            int end = (i + 1) * SCALE / THREAD_COUNT;
+
+            PiThread thread = new PiThread(start, end, sign);
+
+            thread.start();
+
+            sign = !sign;
+
+            try {
+
+                thread.join();
+
+                pi = pi.add(thread.getSum());
+
+            } catch (InterruptedException e) {
+
+                e.printStackTrace();
+
+            }
+
+        }
+        return pi.setScale(floatingPoint, RoundingMode.HALF_UP).toString();
+    }
+    private class PiThread extends Thread {
+
+        private final int start;
+
+        private final int end;
+
+        private final boolean sign;
+
+        private BigDecimal sum;
+
+
+
+        public PiThread(int start, int end, boolean sign) {
+
+            this.start = start;
+
+            this.end = end;
+
+            this.sign = sign;
+
+            this.sum = BigDecimal.ZERO;
+
+        }
+
+
+
+        public void run() {
+
+            for (int i = start; i < end; i++) {
+
+                BigDecimal numerator =
+
+                        new BigDecimal(sign ? 1 : -1)
+
+                                .multiply(new BigDecimal(4 * i + 1))
+
+                                .multiply(new BigDecimal(4 * i + 3))
+
+                                .multiply(new BigDecimal(4 * i + 5));
+
+                BigDecimal denominator =
+
+                        new BigDecimal(2)
+
+                                .multiply(new BigDecimal(4 * i + 2))
+
+                                .multiply(new BigDecimal(4 * i + 4))
+
+                                .multiply(new BigDecimal(4 * i + 6));
+
+                sum = sum.add(numerator.divide(denominator, SCALE, RoundingMode.HALF_UP));
+
+            }
+
+        }
+
+
+
+        public BigDecimal getSum() {
+
+            return sum;
+
+        }
+
     }
 
     public static void main(String[] args) {
